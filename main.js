@@ -1,6 +1,8 @@
 let europeMap;
 let recoloredImage;
 
+let screenAspectRatio;
+
 let mapOffsetX = 0;
 let mapOffsetY = 0;
 let dragging = false;
@@ -30,7 +32,7 @@ function draw() {
   // Draw the Europe map
   push();
   translate(mapOffsetX, mapOffsetY);
-  image(europeMap, 0, 0, windowHeight*2*16/9 /*assuming about a 16:9 ratio*/, windowHeight*2);
+  image(europeMap, 0, 0, screenWidth*2, screenHeight*2);
   pop();
 
   // Draw and color countries
