@@ -33,17 +33,22 @@ function recolorMap() {
 
   let w = europeMap.width;
   let h = europeMap.height;
-  let visited = new Uint8Array(w * h); // Use a Uint8Array for efficient memory usage
+  let visited = new Uint8Array(w * h); // Efficient memory usage
 
-  const stack = []; // Single reusable stack to avoid frequent memory allocations
+  // Single reusable queue for flood fill
+  const queue = [];
+
+  // Direct access to pixels in memory
+  const pixels = europeMap.pixels;
+  const recoloredPixels = recoloredImage.pixels;
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       let index = x + y * w;
-      if (!visited[index] && !isBorderPixel(index, europeMap.pixels)) {
+      if (!visited[index] && !isBorderPixel(index, pixels)) {
         // Flood-fill this region with a random color
         let randomColor = [random(255), random(255), random(255)];
-        floodFill(x, y, randomColor, visited, stack);
+        floodFill(x, y, randomColor, visited, queue, w, h, pixels, recoloredPixels);
       }
     }
   }
@@ -52,35 +57,33 @@ function recolorMap() {
 }
 
 function isBorderPixel(index, pixels) {
-  // Check if the pixel is part of a dark border
   let r = pixels[index * 4];
   let g = pixels[index * 4 + 1];
   let b = pixels[index * 4 + 2];
-  return r < 50 && g < 50 && b < 50; // Example threshold for a dark pixel
+  return r < 50 && g < 50 && b < 50; // Threshold for dark pixels
 }
 
-function floodFill(x, y, fillColor, visited, stack) {
-  let w = europeMap.width;
-  let h = europeMap.height;
-  let targetColor = getColor(x, y, europeMap.pixels);
+function floodFill(x, y, fillColor, visited, queue, w, h, pixels, recoloredPixels) {
+  let targetColor = getColor(x, y, pixels);
 
-  stack.push([x, y]);
+  queue.push([x, y]);
 
-  while (stack.length > 0) {
-    let [cx, cy] = stack.pop();
+  while (queue.length > 0) {
+    let [cx, cy] = queue.pop();
     let index = cx + cy * w;
 
     if (cx < 0 || cy < 0 || cx >= w || cy >= h || visited[index]) continue;
 
-    if (!colorsMatch(targetColor, getColor(cx, cy, europeMap.pixels))) continue;
+    if (!colorsMatch(targetColor, getColor(cx, cy, pixels))) continue;
 
-    setColor(cx, cy, fillColor, recoloredImage.pixels);
+    setColor(cx, cy, fillColor, recoloredPixels);
     visited[index] = 1;
 
-    stack.push([cx + 1, cy]);
-    stack.push([cx - 1, cy]);
-    stack.push([cx, cy + 1]);
-    stack.push([cx, cy - 1]);
+    // Queue neighbors
+    if (cx + 1 < w) queue.push([cx + 1, cy]);
+    if (cx - 1 >= 0) queue.push([cx - 1, cy]);
+    if (cy + 1 < h) queue.push([cx, cy + 1]);
+    if (cy - 1 >= 0) queue.push([cx, cy - 1]);
   }
 }
 
