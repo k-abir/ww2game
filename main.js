@@ -1,4 +1,4 @@
-const var backgroundColor = color(0,92,230);
+const backgroundColor = color(0,92,230);
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
