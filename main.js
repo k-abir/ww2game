@@ -1,114 +1,102 @@
 let europeMap;
-let countries = [
-  { name: "Germany", x: 500, y: 300, color: "red" },
-  { name: "France", x: 450, y: 320, color: "blue" },
-  { name: "UK", x: 400, y: 250, color: "green" },
-  { name: "Italy", x: 550, y: 400, color: "orange" },
-  { name: "Soviet Union", x: 650, y: 200, color: "purple" },
-];
+let regionMask; // Mask for determining country regions
+let recoloredImage;
 
-let startMenu = true;
 let mapOffsetX = 0;
 let mapOffsetY = 0;
 let dragging = false;
 let dragStartX, dragStartY;
 
+let countries = [
+  { name: "Germany", color: [255, 0, 0] }, // Red
+  { name: "France", color: [0, 0, 255] },  // Blue
+  { name: "UK", color: [0, 255, 0] },      // Green
+  { name: "Italy", color: [255, 165, 0] }, // Orange
+  { name: "Soviet Union", color: [128, 0, 128] }, // Purple
+];
+
 function preload() {
-  // Preload the map of Europe (replace with a valid hosted image URL)
+  // Load the Europe map and region mask (grayscale image with unique colors for each country)
   europeMap = loadImage("EuropeMap.jpg");
+  regionMask = loadImage("RegionMask.png"); // Create a grayscale mask
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  noLoop(); // Initial render
+  noLoop();
+  recolorMap(); // Process the map
 }
 
 function draw() {
-  if (startMenu) {
-    drawStartMenu();
-  } else {
-    drawMap();
-  }
-}
+  background(0, 92, 230); // Set background
 
-function drawStartMenu() {
-  background(50);
-  fill(255);
-  textSize(32);
-  textAlign(CENTER, CENTER);
-  text("Welcome to the WWII Game!", width / 2, height / 3);
-
-  fill(100, 200, 100);
-  rectMode(CENTER);
-  rect(width / 2, (2 * height) / 3, 200, 60);
-
-  fill(255);
-  textSize(24);
-  text("Start", width / 2, (2 * height) / 3);
-}
-
-function drawMap() {
-  background(0, 92, 230); // Set the background to blue
-
+  // Draw the map
   push();
   translate(mapOffsetX, mapOffsetY);
-  image(europeMap, 0, 0, europeMap.width, europeMap.height);
-
-  // Highlight participating countries
-  for (let country of countries) {
-    fill(country.color);
-    noStroke();
-    ellipse(country.x, country.y, 50, 50); // Highlight country with a circle
-    fill(255);
-    textSize(14);
-    textAlign(CENTER);
-    text(country.name, country.x, country.y + 30); // Add country label
-  }
+  image(recoloredImage, 0, 0, recoloredImage.width, recoloredImage.height);
   pop();
 }
 
-function mousePressed() {
-  if (startMenu) {
-    // Check if Start button is clicked
-    if (
-      mouseX > width / 2 - 100 &&
-      mouseX < width / 2 + 100 &&
-      mouseY > (2 * height) / 3 - 30 &&
-      mouseY < (2 * height) / 3 + 30
-    ) {
-      startMenu = false;
-      loop();
-    }
-  } else {
-    dragging = true;
-    dragStartX = mouseX - mapOffsetX;
-    dragStartY = mouseY - mapOffsetY;
+function recolorMap() {
+  // Create a graphics buffer for the recolored map
+  recoloredImage = createGraphics(regionMask.width, regionMask.height);
 
-    // Check if any country is clicked
-    for (let country of countries) {
-      let d = dist(mouseX - mapOffsetX, mouseY - mapOffsetY, country.x, country.y);
-      if (d < 25) {
-        alert(`You selected ${country.name}`);
+  // Load pixel data from the mask
+  regionMask.loadPixels();
+  recoloredImage.loadPixels();
+
+  for (let y = 0; y < regionMask.height; y++) {
+    for (let x = 0; x < regionMask.width; x++) {
+      // Get pixel index
+      let index = (x + y * regionMask.width) * 4;
+
+      // Get the color from the region mask
+      let r = regionMask.pixels[index];
+      let g = regionMask.pixels[index + 1];
+      let b = regionMask.pixels[index + 2];
+
+      // Determine the country based on the mask color
+      let country = countries.find(
+        (c) => c.color[0] === r && c.color[1] === g && c.color[2] === b
+      );
+
+      if (country) {
+        // Assign the country's color to the recolored image
+        recoloredImage.pixels[index] = country.color[0];
+        recoloredImage.pixels[index + 1] = country.color[1];
+        recoloredImage.pixels[index + 2] = country.color[2];
+        recoloredImage.pixels[index + 3] = 255; // Full opacity
+      } else {
+        // Default to transparent if no country matches
+        recoloredImage.pixels[index + 3] = 0;
       }
     }
   }
+
+  // Update pixels in the recolored image
+  recoloredImage.updatePixels();
+}
+
+function mousePressed() {
+  // Start dragging
+  dragging = true;
+  dragStartX = mouseX - mapOffsetX;
+  dragStartY = mouseY - mapOffsetY;
 }
 
 function mouseReleased() {
+  // Stop dragging
   dragging = false;
 }
 
 function mouseDragged() {
-  if (!startMenu && dragging) {
+  if (dragging) {
     mapOffsetX = mouseX - dragStartX;
     mapOffsetY = mouseY - dragStartY;
-    loop(); // Re-render the map while dragging
+    redraw(); // Update the canvas while dragging
   }
 }
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  if (!startMenu) {
-    loop();
-  }
 }
