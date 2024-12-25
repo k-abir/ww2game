@@ -10,7 +10,7 @@ let countries = [
 function preload() {
   // Preload the map of Europe (replace with a valid hosted image URL)
   europeMap = loadImage(
-    "https://upload.wikimedia.org/wikipedia/commons/c/cb/Blank_map_of_Europe_%281939%29.png"
+    "EuropeMap.jpg"
   );
 }
 
