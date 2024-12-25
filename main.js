@@ -32,7 +32,7 @@ function draw() {
   // Draw the Europe map
   push();
   translate(mapOffsetX, mapOffsetY);
-  image(europeMap, 0, 0, screenWidth*2, screenHeight*2);
+  image(europeMap, 0, 0, displayWidth*2, displayWidth*2);
   pop();
 
   // Draw and color countries
