@@ -25,7 +25,7 @@ function setup() {
 }
 
 function draw() {
-  background(0, 92, 230); // Set background to blue
+  background(21,88,67); // Set background to dark green
 
   // Draw the Europe map
   push();
