@@ -45,7 +45,7 @@ function recolorMap() {
     for (let x = 0; x < w; x++) {
       let index = x + y * w;
       if (isBorderPixel(index, pixels)) {
-        for (let i = -5; i <= 5; i++) {
+        for (let i = -10; i <= 10; i++) {
           let nx = x + i;
           if (nx >= 0 && nx < w) {
             borderPixels.add((nx + y * w)); // Add 5 pixels into the border
