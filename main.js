@@ -30,6 +30,7 @@ function setup() {
 function draw() {
   background(0, 92, 230); // Set background
 
+  dragging = false; // It will be set to true iff mousePressed
   // Draw the map
   push();
   translate(mapOffsetX, mapOffsetY);
