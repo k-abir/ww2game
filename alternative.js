@@ -33,15 +33,17 @@ function recolorMap() {
 
   let w = europeMap.width;
   let h = europeMap.height;
-  let visited = new Array(w * h).fill(false);
+  let visited = new Uint8Array(w * h); // Use a Uint8Array for efficient memory usage
+
+  const stack = []; // Single reusable stack to avoid frequent memory allocations
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      let index = (x + y * w) * 4;
-      if (!visited[index] && isBorderPixel(index, europeMap.pixels)) {
+      let index = x + y * w;
+      if (!visited[index] && !isBorderPixel(index, europeMap.pixels)) {
         // Flood-fill this region with a random color
         let randomColor = [random(255), random(255), random(255)];
-        floodFill(x, y, randomColor, visited);
+        floodFill(x, y, randomColor, visited, stack);
       }
     }
   }
@@ -51,28 +53,29 @@ function recolorMap() {
 
 function isBorderPixel(index, pixels) {
   // Check if the pixel is part of a dark border
-  let r = pixels[index];
-  let g = pixels[index + 1];
-  let b = pixels[index + 2];
+  let r = pixels[index * 4];
+  let g = pixels[index * 4 + 1];
+  let b = pixels[index * 4 + 2];
   return r < 50 && g < 50 && b < 50; // Example threshold for a dark pixel
 }
 
-function floodFill(x, y, fillColor, visited) {
-  let stack = [[x, y]];
+function floodFill(x, y, fillColor, visited, stack) {
   let w = europeMap.width;
   let h = europeMap.height;
   let targetColor = getColor(x, y, europeMap.pixels);
 
+  stack.push([x, y]);
+
   while (stack.length > 0) {
     let [cx, cy] = stack.pop();
-    let index = (cx + cy * w) * 4;
+    let index = cx + cy * w;
 
     if (cx < 0 || cy < 0 || cx >= w || cy >= h || visited[index]) continue;
 
     if (!colorsMatch(targetColor, getColor(cx, cy, europeMap.pixels))) continue;
 
     setColor(cx, cy, fillColor, recoloredImage.pixels);
-    visited[index] = true;
+    visited[index] = 1;
 
     stack.push([cx + 1, cy]);
     stack.push([cx - 1, cy]);
@@ -95,7 +98,7 @@ function setColor(x, y, color, pixels) {
 }
 
 function colorsMatch(c1, c2) {
-  return abs(c1[0] - c2[0]) < 10 && abs(c1[1] - c2[1]) < 10 && abs(c1[2] - c2[2]) < 10;
+  return Math.abs(c1[0] - c2[0]) < 10 && Math.abs(c1[1] - c2[1]) < 10 && Math.abs(c1[2] - c2[2]) < 10;
 }
 
 function mousePressed() {
