@@ -31,21 +31,35 @@ function recolorMap() {
   europeMap.loadPixels();
   recoloredImage.loadPixels();
 
-  let w = europeMap.width;
-  let h = europeMap.height;
-  let visited = new Uint8Array(w * h); // Efficient memory usage
-
-  // Single reusable queue for flood fill
-  const queue = [];
-
-  // Direct access to pixels in memory
+  const w = europeMap.width;
+  const h = europeMap.height;
   const pixels = europeMap.pixels;
   const recoloredPixels = recoloredImage.pixels;
 
+  let visited = new Uint8Array(w * h); // Efficient memory usage
+  const queue = []; // Queue-based flood fill
+
+  // Precompute the thresholded border pixels
+  const borderPixels = new Set();
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       let index = x + y * w;
-      if (!visited[index] && !isBorderPixel(index, pixels)) {
+      if (isBorderPixel(index, pixels)) {
+        for (let i = -5; i <= 5; i++) {
+          let nx = x + i;
+          if (nx >= 0 && nx < w) {
+            borderPixels.add((nx + y * w)); // Add 5 pixels into the border
+          }
+        }
+      }
+    }
+  }
+
+  // Perform flood fill
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let index = x + y * w;
+      if (!visited[index] && !borderPixels.has(index)) {
         // Flood-fill this region with a random color
         let randomColor = [random(255), random(255), random(255)];
         floodFill(x, y, randomColor, visited, queue, w, h, pixels, recoloredPixels);
@@ -79,7 +93,7 @@ function floodFill(x, y, fillColor, visited, queue, w, h, pixels, recoloredPixel
     setColor(cx, cy, fillColor, recoloredPixels);
     visited[index] = 1;
 
-    // Queue neighbors
+    // Queue neighbors (manual unrolling for better performance)
     if (cx + 1 < w) queue.push([cx + 1, cy]);
     if (cx - 1 >= 0) queue.push([cx - 1, cy]);
     if (cy + 1 < h) queue.push([cx, cy + 1]);
