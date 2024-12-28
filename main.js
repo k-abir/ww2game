@@ -1,25 +1,44 @@
-let europeMap;
-let recoloredImage;
+let selectedCountry = null;
+let currentStage = 0;
+let gameInProgress = false;
 
-let screenAspectRatio;
-
-let mapOffsetX = 0;
-let mapOffsetY = 0;
-let dragging = false;
-let dragStartX, dragStartY;
-
-let countries = [
-  { name: "Germany", color: [255, 0, 0], x: 500, y: 300, radius: 30 },
-  { name: "France", color: [0, 0, 255], x: 450, y: 320, radius: 30 },
-  { name: "UK", color: [0, 255, 0], x: 400, y: 250, radius: 30 },
-  { name: "Italy", color: [255, 165, 0], x: 550, y: 400, radius: 30 },
-  { name: "Soviet Union", color: [128, 0, 128], x: 650, y: 200, radius: 30 },
+let germanyDecisions = [
+  {
+    decision: "Invade Poland (1939): Will you proceed with the invasion of Poland to spark the war?",
+    options: [
+      { text: "Invade with Blitzkrieg strategy", result: "War begins successfully, but Allies respond." },
+      { text: "Negotiate with Poland for Danzig", result: "Negotiation fails; invasion inevitable." },
+    ],
+  },
+  {
+    decision: "Battle of France (1940): How will you approach the Western Front?",
+    options: [
+      { text: "Execute the Schlieffen Plan 2.0", result: "France falls quickly, but UK escapes." },
+      { text: "Focus on diplomacy with Italy", result: "Italy joins the war, but momentum slows." },
+    ],
+  },
+  {
+    decision: "Battle of Britain (1940): What strategy will you use?",
+    options: [
+      { text: "Focus on air raids over London", result: "Civilians suffer, but RAF regains strength." },
+      { text: "Target RAF airfields and resources", result: "RAF weakens, but invasion delayed." },
+    ],
+  },
+  {
+    decision: "Operation Barbarossa (1941): How will you invade the Soviet Union?",
+    options: [
+      { text: "Launch early for a surprise attack", result: "Initial success, but winter halts advance." },
+      { text: "Build up resources for a massive push", result: "Delayed start leads to logistical issues." },
+    ],
+  },
+  {
+    decision: "Final Stand (1944–1945): What will be your final effort?",
+    options: [
+      { text: "Focus on defending Berlin", result: "Delays the end but ensures major losses." },
+      { text: "Attempt peace negotiations", result: "Rejected; unconditional surrender demanded." },
+    ],
+  },
 ];
-
-function preload() {
-  // Load the Europe map for visual purposes
-  europeMap = loadImage("EuropeMap.jpg");
-}
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -27,54 +46,70 @@ function setup() {
 }
 
 function draw() {
-  background(21,88,67); // Set background to dark green
+  background(30);
+  textAlign(CENTER);
+  fill(255);
 
-  // Draw the Europe map
-  push();
-  translate(mapOffsetX, mapOffsetY);
-  image(europeMap, 0, 0, displayWidth*2, displayHeight*2);
-  pop();
+  if (!gameInProgress) {
+    // Country Selection Screen
+    textSize(32);
+    text("Select Your Country", width / 2, height / 4);
 
-  // Draw and color countries
-  for (let country of countries) {
-    fill(country.color);
-    noStroke();
-    ellipse(country.x + mapOffsetX, country.y + mapOffsetY, country.radius * 2, country.radius * 2);
-    fill(255); // White color for the country name
-    textAlign(CENTER, CENTER);
-    textSize(12);
-    text(country.name, country.x + mapOffsetX, country.y + mapOffsetY);
-  }
-}
+    // Germany Button
+    drawButton("Germany", width / 2 - 100, height / 2, 200, 50, "germany");
+  } else if (selectedCountry === "Germany") {
+    // Gameplay Screen for Germany
+    textSize(24);
+    if (currentStage < germanyDecisions.length) {
+      const decision = germanyDecisions[currentStage];
+      text(decision.decision, width / 2, height / 4);
 
-function mousePressed() {
-  // Start dragging the map
-  dragging = true;
-  dragStartX = mouseX - mapOffsetX;
-  dragStartY = mouseY - mapOffsetY;
-}
-
-function mouseReleased() {
-  // Stop dragging
-  dragging = false;
-
-  // Check if any country was clicked
-  for (let country of countries) {
-    let d = dist(mouseX - mapOffsetX, mouseY - mapOffsetY, country.x, country.y);
-    if (d < country.radius) {
-      alert(`You selected ${country.name}`);
+      // Display Options
+      for (let i = 0; i < decision.options.length; i++) {
+        let option = decision.options[i];
+        drawButton(option.text, width / 2 - 150, height / 2 + i * 60, 300, 50, `option${i}`);
+      }
+    } else {
+      text("Game Over. Relive history or try a different strategy!", width / 2, height / 2);
     }
   }
 }
 
-function mouseDragged() {
-  if (dragging) {
-    mapOffsetX = mouseX - dragStartX;
-    mapOffsetY = mouseY - dragStartY;
-    redraw(); // Update the canvas while dragging
+function mousePressed() {
+  if (!gameInProgress) {
+    if (mouseInside(width / 2 - 100, height / 2, 200, 50)) {
+      selectedCountry = "Germany";
+      gameInProgress = true;
+      redraw();
+    }
+  } else if (selectedCountry === "Germany") {
+    if (currentStage < germanyDecisions.length) {
+      let decision = germanyDecisions[currentStage];
+      for (let i = 0; i < decision.options.length; i++) {
+        if (mouseInside(width / 2 - 150, height / 2 + i * 60, 300, 50)) {
+          alert(decision.options[i].result);
+          currentStage++;
+          redraw();
+          break;
+        }
+      }
+    }
   }
+}
+
+function drawButton(label, x, y, w, h, id) {
+  fill(80);
+  rect(x, y, w, h, 10);
+  fill(255);
+  textSize(18);
+  text(label, x + w / 2, y + h / 2 + 6);
+}
+
+function mouseInside(x, y, w, h) {
+  return mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h;
 }
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+  redraw();
 }
