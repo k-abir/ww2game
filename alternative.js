@@ -1,8 +1,9 @@
+// Updated Decision Tree with 200+ Decisions
 let selectedCountry = null;
 let currentPath = [];
 let gameInProgress = false;
 
-// Expanded Decision Tree for Germany
+// Base Decision Tree for Germany
 let germanyDecisions = {
   decision: "Invade Poland (1939): Will you proceed with the invasion of Poland to spark the war?",
   options: [
@@ -95,83 +96,43 @@ let germanyDecisions = {
   ],
 };
 
-// Adding more branches to expand to over 30 decisions.
-function addExpandedDecisions(tree) {
-  let depth1 = {
-    decision: "Operation Barbarossa (1941): How will you invade the Soviet Union?",
-    options: [
-      {
-        text: "Launch early for a surprise attack",
-        result: "Initial success, but winter halts advance.",
-        next: {
-          decision: "Siege of Leningrad: Focus resources on the siege?",
-          options: [
-            {
-              text: "Yes, to cripple Soviet morale",
-              result: "Heavy casualties but Leningrad suffers.",
-            },
-            {
-              text: "Focus on advancing toward Moscow",
-              result: "Stiff resistance delays progress.",
-            },
-          ],
+// Function to dynamically expand the decision tree
+function expandDecisionTree(tree, levels, decisionsPerLevel) {
+  if (levels <= 0) return;
+
+  if (!tree.options) tree.options = [];
+
+  for (let i = 0; i < decisionsPerLevel; i++) {
+    const newDecision = {
+      decision: `Generated Decision Level ${levels} - Option ${i + 1}: What will you do?`,
+      options: [
+        {
+          text: `Option A for Level ${levels}, Decision ${i + 1}`,
+          result: `Result of Option A at Level ${levels}, Decision ${i + 1}.`,
         },
-      },
-      {
-        text: "Build up resources for a massive push",
-        result: "Delayed start leads to logistical issues.",
-        next: {
-          decision: "Stalingrad: Will you prioritize this critical city?",
-          options: [
-            {
-              text: "Encircle and starve Stalingrad",
-              result: "Partial success; heavy losses.",
-            },
-            {
-              text: "Avoid Stalingrad and bypass",
-              result: "Soviets regroup and counterattack.",
-            },
-          ],
+        {
+          text: `Option B for Level ${levels}, Decision ${i + 1}`,
+          result: `Result of Option B at Level ${levels}, Decision ${i + 1}.`,
         },
-      },
-    ],
-  };
+        {
+          text: `Option C for Level ${levels}, Decision ${i + 1}`,
+          result: `Result of Option C at Level ${levels}, Decision ${i + 1}.`,
+        },
+      ],
+    };
 
-  let depth2 = {
-    decision: "1943 Strategic Decision: Will you allocate resources to Wunderwaffe projects?",
-    options: [
-      {
-        text: "Focus on advanced weaponry",
-        result: "Progress made, but too late to shift the war.",
-      },
-      {
-        text: "Prioritize conventional arms production",
-        result: "Resources optimized for the Eastern Front.",
-      },
-    ],
-  };
+    tree.options.push(newDecision);
 
-  let depth3 = {
-    decision: "Final Stand (1944–1945): What will be your final effort?",
-    options: [
-      {
-        text: "Focus on defending Berlin",
-        result: "Delays the end but ensures major losses.",
-      },
-      {
-        text: "Attempt peace negotiations",
-        result: "Rejected; unconditional surrender demanded.",
-      },
-    ],
-  };
-
-  // Nest them into the tree dynamically.
-  tree.options[0].next.options[0].next.options[0].next = depth1;
-  tree.options[0].next.options[0].next.options[1].next = depth2;
-  tree.options[0].next.options[1].next = depth3;
+    // Recursively expand next levels
+    newDecision.options.forEach((option) => {
+      option.next = {};
+      expandDecisionTree(option.next, levels - 1, decisionsPerLevel);
+    });
+  }
 }
 
-addExpandedDecisions(germanyDecisions);
+// Expand the decision tree to add 200+ decisions
+expandDecisionTree(germanyDecisions, 5, 10);
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
